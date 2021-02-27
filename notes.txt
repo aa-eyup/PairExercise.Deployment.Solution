@@ -1,0 +1,42 @@
+heroku login
+
+heroku create app-name
+
+PUSH TO HEROKU BRANCH ------------------------
+Heroku has already added itself as a remote for you
+In that case you can deploy immediately by pushing your branch to Heroku:
+git push heroku master
+
+Now the app is building, but you can see a few important pieces of information here, in particular that it "detected" your Node app. How did it do that? It noticed your file named package.json and will use it in some way to install your app on their servers. When it is done with that, it will run npm start and your app will be running at your-app-name.herokuapp.com.
+
+LOGGING ------------------------
+But it is usually more useful to run heroku logs from the command line. The advantage of this method is that you can filter the output for a particular form of message using bash pipelining. Additionally, you can get a live view of the logs by using the --tail flag. Then as messages are generated on your dyno they will appear in your terminal.
+heroku logs --tail
+
+SERVING BUNDLE.JS ------------------------
+Your bundle is not being served on your app site, but why? The answer is these lines in the .gitignore file:
+bundle.js
+bundle.js.map
+=> need to send those files to Heroku
+*** => npm run deploy => script/deploy
+=> This script creates a deploy branch, runs webpack, adds these files to the branch, commits these changes, deploys them to Heroku by git push heroku deploy:master and finally deletes the deploy branch.
+
+DATABASE ADD ON ------------------------
+First navigate to "Configure Add-ons" in the Heroku dashboard for your app.
+Then search for postgres and click Heroku Postgres:
+Then select the "Hobby Dev -- Free" option
+
+* when you add an add-on, your app will restart. Your app will also restart if we update any environment variables, or "Config Vars" as Heroku calls them
+
+CREATE SCHEMA & LOAD TABLES ---------------------
+seed the database
+=> heroku run bash (interactive shell session on your Heroku dyno)
+=> npm run seed
+
+CI/CD and Travis --------------------
+
+ENCRYPTING HEROKU AUTH TOKEN -----------------------
+Travis uses so-called asymmetric encryption, or Public-key cryptography, to enable this feature. Travis generates a key pair (a pair of keys: public and private) for our repository. It makes the public key available via an API. We download this public key and use it to encrypt secure data, in this case just the deploy.api_key parameter. This encrypted data is saved in the .travis.yml file in the deploy.api_key.secure key. Then you will upload this to your Github repository. When Travis sees an update to master, it looks at our encrypted value and can use the private key it made for your repository (and kept secret) to decrypt the value. It can then use the decrypted data to authenticate with Heroku and deploy on your behalf.
+
+Alternatively, you can generate an encrypted key using
+=> npm run heroku-token.
